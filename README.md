@@ -1,15 +1,15 @@
-# 📉 Financial News Sentiment Engine
+#  Financial News Sentiment Engine
 
 ![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
 ![Scrapy](https://img.shields.io/badge/Framework-Scrapy-green)
 ![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue)
 
-## 📋 Project Overview
+## Project Overview
 This project is a **Quantitative Data Pipeline** designed to harvest, process, and analyze unstructured financial news in real-time.
 
 Unlike standard web scrapers, this engine treats news as a financial signal. It utilizes a **Decoupled Producer-Consumer Architecture** to handle high-latency pagination (via Selenium) and high-concurrency extraction (via Scrapy), feeding a structured PostgreSQL warehouse used for sentiment analysis and price target extraction.
 
-## 🏗 System Architecture
+##  System Architecture
 
 The system operates in two distinct stages to maximize efficiency and fault tolerance:
 
@@ -24,14 +24,14 @@ The system operates in two distinct stages to maximize efficiency and fault tole
 * **Performance:** Optimized to process pending articles in batches using `psycopg2` connection pooling.
 * **Idempotency:** Designed to run continuously without creating duplicate entries.
 
-## 🧠 NLP & Signal Processing
+##  NLP & Signal Processing
 The pipeline includes a custom `pipelines.py` layer that performs real-time feature engineering:
 
 * **Context-Aware Sentiment:** Scores news not just on polarity, but on market context (e.g., *'Strong Dollar'* is interpreted as Bearish for Gold).
 * **Price Target Extraction:** Uses RegEx patterns to extract Support/Resistance levels and analyst price targets (e.g., "$2,400").
 * **Urgency Classification:** Categorizes news as "Breaking," "High," or "Low" urgency based on keyword velocity.
 
-## 🛠 Tech Stack
+## Tech Stack
 
 | Component | Technology | Key Features |
 | :--- | :--- | :--- |
@@ -40,8 +40,11 @@ The pipeline includes a custom `pipelines.py` layer that performs real-time feat
 | **Processing** | Pandas, NLTK (Planned) | Vectorized text analysis. |
 | **Environment** | Dotenv | Secure credential management. |
 
-## 🚀 Installation & Usage
+##  Installation & Usage
 
 1. **Clone the repository**
    ```bash
    git clone [https://github.com/YOUR_USERNAME/Financial-News-Sentiment-Engine.git](https://github.com/YOUR_USERNAME/Financial-News-Sentiment-Engine.git)
+
+##  Author
+   Gabriel Justina Ayomide
