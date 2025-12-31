@@ -41,7 +41,7 @@ class ValidationPipeline:
         if isinstance(item, KitcoItem):
             required_fields = ['headline', 'timestamp', 'url']
         elif isinstance(item, KitcoArticleItem):
-            required_fields = ['full_text', 'published_date', 'updated_date', 'author', 'tags']
+            required_fields = ['full_text', 'url']
         for field in required_fields:
             if not adapter.get(field):
                 raise DropItem(f"Missing required field {field} in {type(item).__name__}")
@@ -816,7 +816,7 @@ class PostgreSQLPipeline:
                 ORDER BY mention_count DESC;                                                                                                                                                                                    
             """)
             conn.commit()
-            self.logger.info("Analysis views created successfullt")
+            self.logger.info("Analysis views created successfully")
         except Exception as e:
             conn.rollback()
             self.logger.error(f"Error creating views: {e}")
@@ -844,6 +844,7 @@ class PostgreSQLPipeline:
                 DO UPDATE SET      
                     full_text = EXCLUDED.full_text,
                     author = EXCLUDED.author,
+                    published_date = EXCLUDED.published_date,
                     updated_date = EXCLUDED.updated_date,
                     tags = EXCLUDED.tags,
                     updated_at = CURRENT_TIMESTAMP
