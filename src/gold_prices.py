@@ -212,24 +212,28 @@ class GoldPriceFetcher:
         """Save price data to database"""
         cur = self.conn.cursor()
         rows_saved = 0
-
-        for date, row in data.iterrows():
+        
+        # if the dataframe has multiple levels (Price, Ticker), extract just our symbol.
+        df_to_process = data
+        if isinstance(data.columns, pd.MultiIndex):
             try:
-                # Handle both single and multi-level column names
-                if isinstance(row.index, pd.MultiIndex):
-                    open_val = row[('Open', symbol)]
-                    high_val = row[('High', symbol)]
-                    low_val = row[('Low', symbol)]
-                    close_val = row[('Close', symbol)]
-                    adj_close_val = row[('Adj Close', symbol)]
-                    volume_val = row[('Volume', symbol)]
-                else:
-                    open_val = row['Open']
-                    high_val = row['High']
-                    low_val = row['Low']
-                    close_val = row['Close']
-                    adj_close_val = row.get('Adj Close', row['Close'])
-                    volume_val = row['Volume']
+                df_to_process = data.xs(symbol, axis=1, level=1, drop_level=True)
+            except KeyError:
+                try:
+                    df_to_process = data.xs(symbol, axis=1, level=0, drop_level=True)
+                except KeyError:
+                    logger.warning(f"could not find data for {symbol} in MultiIndex.")
+                    return 0
+
+        for date, row in df_to_process.iterrows():
+            try:
+                open_val = row.get('Open')
+                high_val = row.get('High')
+                low_val = row.get('Low')
+                close_val = row.get('Close')
+                adj_close_val = row.get('Adj Close')
+                volume_val = row.get('Volume')
+              
                 cur.execute('''
                     INSERT INTO market_prices (date, symbol, name, open, high, low, close, adj_close, volume)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
