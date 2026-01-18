@@ -9,6 +9,7 @@ from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score,
     classification_report, confusion_matrix, roc_auc_score, roc_curve
 )
+from sklearn.model_selection import RandomizedSearchCV
 from xgboost import XGBClassifier
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -262,6 +263,82 @@ class GoldPricePredictor:
             print(f"   ROC-AUC:  {roc_auc:.4f}")
             print(f"   CV Score: {cv_scores.mean():.4f} (+/- {cv_scores.std():.4f})")
 
+    def tune_xgboost(self):
+        """Tune XGBoost hyperparameters"""
+        print(" XGBOOST HYPERPARAMETER TUNING")
+
+        param_grid = {
+            'n_estimators': [50, 100, 200],
+            'max_depth': [3, 5, 7, 10],
+            'learning_rate': [0.01, 0.05, 0.1, 0.2],
+            'min_child_weight': [1, 3, 5],
+            'subsample': [0.6, 0.8, 1.0],
+            'colsample_bytree': [0.6, 0.8, 1.0],
+            'gamma': [0, 0.1, 0.2]
+        }
+
+        print ("Running RandomizedSearchCV...")
+
+        model = XGBClassifier(
+            random_state = 42,
+            use_label_encoder = False,
+            eval_metric = 'logloss',
+            n_jobs = -1
+        )
+
+        cv = TimeSeriesSplit(n_splits=5)
+    
+        random_search = RandomizedSearchCV(
+            estimator=model,
+            param_distributions=param_grid,
+            n_iter=50,
+            cv=cv,
+            scoring='roc_auc',
+            random_state=42,
+            n_jobs=-1,
+            verbose=1
+        )
+        random_search.fit(self.X_train, self.y_train)
+
+        print(f"\n Best Parameters:")
+        for param, value in random_search.best_params_.items():
+            print(f"   {param}: {value}")
+        
+        # Evaluate
+        best_model = random_search.best_estimator_
+        y_pred = best_model.predict(self.X_test)
+        y_prob = best_model.predict_proba(self.X_test)[:, 1]
+        
+        accuracy = accuracy_score(self.y_test, y_pred)
+        roc_auc = roc_auc_score(self.y_test, y_prob)
+        
+        print(f"\n Tuned XGBoost Results:")
+        print(f"   Accuracy: {accuracy:.4f}")
+        print(f"   ROC-AUC:  {roc_auc:.4f}")
+        
+        # Compare with baseline
+        baseline = self.results['XGBoost']['accuracy']
+        improvement = (accuracy - baseline) / baseline * 100
+        print(f"   Improvement: {improvement:+.1f}%")
+        
+        # Calculate all metrics
+        precision = precision_score(self.y_test, y_pred)
+        recall = recall_score(self.y_test, y_pred)
+        f1 = f1_score(self.y_test, y_pred)
+
+        self.results['XGBoost Tuned'] = {
+            'model': best_model,
+            'accuracy': accuracy,
+            'precision': precision,
+            'recall': recall,
+            'f1': f1,
+            'cv_mean': random_search.best_score_,
+            'cv_std': 0,
+            'roc_auc': roc_auc,
+            'y_pred': y_pred,
+            'y_prob': y_prob
+        }
+
     def display_results(self):
         """Display comprehensive results"""
         print(" MODEL COMPARISON")
@@ -503,43 +580,35 @@ class GoldPricePredictor:
             ~self.feature_importance_df['feature'].str.contains('sentiment|bullish|bearish|article|urgency|breaking')
         ].head(5)
         report = f"""
-┌─────────────────────────────────────────────────────────────────────┐
-│                    ML MODEL RESULTS SUMMARY                         │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  DATASET                                                            │
-│  ───────                                                            │
-│  Training samples: {len(self.X_train):<10}                                        │
-│  Testing samples:  {len(self.X_test):<10}                                        │
-│  Features used:    {len(self.features_names):<10}                                        │
-│                                                                     │
-│  BEST MODEL: {best_model_name:<20}                                  │
-│  ─────────────────────────────────                                  │
-│  Accuracy:  {best_result['accuracy']:.4f}                                           │
-│  ROC-AUC:   {best_result['roc_auc']:.4f}                                           │
-│  Precision: {best_result['precision']:.4f}                                           │
-│  Recall:    {best_result['recall']:.4f}                                           │
-│  F1 Score:  {best_result['f1']:.4f}                                           │
-│                                                                     │
-│  TOP SENTIMENT FEATURES                                             │
-│  ──────────────────────                                             │
-│  1. {sentiment_features.iloc[0]['feature']:<30} ({sentiment_features.iloc[0]['importance']:.4f})     │
-│  2. {sentiment_features.iloc[1]['feature']:<30} ({sentiment_features.iloc[1]['importance']:.4f})     │
-│  3. {sentiment_features.iloc[2]['feature']:<30} ({sentiment_features.iloc[2]['importance']:.4f})     │
-│                                                                     │
-│  TOP TECHNICAL FEATURES                                             │
-│  ──────────────────────                                             │
-│  1. {technical_features.iloc[0]['feature']:<30} ({technical_features.iloc[0]['importance']:.4f})     │
-│  2. {technical_features.iloc[1]['feature']:<30} ({technical_features.iloc[1]['importance']:.4f})     │
-│  3. {technical_features.iloc[2]['feature']:<30} ({technical_features.iloc[2]['importance']:.4f})     │
-│                                                                     │
-│  KEY INSIGHTS                                                       │
-│  ────────────                                                       │
-│  • Sentiment features contribute meaningful predictive power        │
-│  • Combining sentiment + technical improves over either alone       │
-│  • High confidence predictions show better risk-adjusted returns    │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
+            ML MODEL RESULTS SUMMARY                         
+            ________________________
+                                                                     
+            DATASET                                                            
+            ───────                                                            
+            Training samples: {len(self.X_train):<10}                                        
+            Testing samples:  {len(self.X_test):<10}                                        
+            Features used:    {len(self.features_names):<10}                                        
+                                                                     
+            BEST MODEL: {best_model_name:<20}                                  
+            ─────────────────────────────────                                  
+            Accuracy:  {best_result['accuracy']:.4f}                                           
+            ROC-AUC:   {best_result['roc_auc']:.4f}                                           
+            Precision: {best_result['precision']:.4f}                                           
+            Recall:    {best_result['recall']:.4f}                                           
+            F1 Score:  {best_result['f1']:.4f}                                           
+                                                                     
+            TOP SENTIMENT FEATURES                                             
+            ──────────────────────                                             
+            1. {sentiment_features.iloc[0]['feature']:<30} ({sentiment_features.iloc[0]['importance']:.4f})     
+            2. {sentiment_features.iloc[1]['feature']:<30} ({sentiment_features.iloc[1]['importance']:.4f})     
+            3. {sentiment_features.iloc[2]['feature']:<30} ({sentiment_features.iloc[2]['importance']:.4f})     
+                                                                     
+            TOP TECHNICAL FEATURES                                             
+            ──────────────────────                                             
+           1. {technical_features.iloc[0]['feature']:<30} ({technical_features.iloc[0]['importance']:.4f})     
+           2. {technical_features.iloc[1]['feature']:<30} ({technical_features.iloc[1]['importance']:.4f})     
+           3. {technical_features.iloc[2]['feature']:<30} ({technical_features.iloc[2]['importance']:.4f})     
+
         """
         print(report)
 
@@ -556,6 +625,7 @@ class GoldPricePredictor:
         self.load_data()
         self.prepare_features()
         self.train_models()
+        self.tune_xgboost()
         self.display_results()
         self.feature_importance()
         self.plot_results()

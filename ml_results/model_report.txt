@@ -1,39 +1,31 @@
 
-┌─────────────────────────────────────────────────────────────────────┐
-│                    ML MODEL RESULTS SUMMARY                         │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  DATASET                                                            │
-│  ───────                                                            │
-│  Training samples: 368                                               │
-│  Testing samples:  92                                                │
-│  Features used:    38                                                │
-│                                                                     │
-│  BEST MODEL: Logistic Regression                                   │
-│  ─────────────────────────────────                                  │
-│  Accuracy:  0.4130                                           │
-│  ROC-AUC:   0.5045                                           │
-│  Precision: 0.6296                                           │
-│  Recall:    0.2787                                           │
-│  F1 Score:  0.3864                                           │
-│                                                                     │
-│  TOP SENTIMENT FEATURES                                             │
-│  ──────────────────────                                             │
-│  1. bullish_ratio_ma3              (0.0400)     │
-│  2. sentiment_ma5                  (0.0396)     │
-│  3. bullish_ratio                  (0.0390)     │
-│                                                                     │
-│  TOP TECHNICAL FEATURES                                             │
-│  ──────────────────────                                             │
-│  1. atr_change                     (0.0656)     │
-│  2. bb_position                    (0.0449)     │
-│  3. return_lag1                    (0.0417)     │
-│                                                                     │
-│  KEY INSIGHTS                                                       │
-│  ────────────                                                       │
-│  • Sentiment features contribute meaningful predictive power        │
-│  • Combining sentiment + technical improves over either alone       │
-│  • High confidence predictions show better risk-adjusted returns    │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
+            ML MODEL RESULTS SUMMARY                         
+            ________________________
+                                                                     
+            DATASET                                                            
+            ───────                                                            
+            Training samples: 368                                               
+            Testing samples:  92                                                
+            Features used:    38                                                
+                                                                     
+            BEST MODEL: Logistic Regression                                   
+            ─────────────────────────────────                                  
+            Accuracy:  0.4130                                           
+            ROC-AUC:   0.5045                                           
+            Precision: 0.6296                                           
+            Recall:    0.2787                                           
+            F1 Score:  0.3864                                           
+                                                                     
+            TOP SENTIMENT FEATURES                                             
+            ──────────────────────                                             
+            1. bullish_ratio_ma3              (0.0400)     
+            2. sentiment_ma5                  (0.0396)     
+            3. bullish_ratio                  (0.0390)     
+                                                                     
+            TOP TECHNICAL FEATURES                                             
+            ──────────────────────                                             
+           1. atr_change                     (0.0656)     
+           2. bb_position                    (0.0449)     
+           3. return_lag1                    (0.0417)     
+
         
